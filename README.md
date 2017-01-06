@@ -10,11 +10,16 @@ SemEval 2017 Challenge - Task 6
 
 OBSERVATIONS:
 - sex, drugs, stereotypes related == funny (2)
-- stemming, tfidf -> useless?
+- stemming, tfidf, sequence tagging -> useless?
 
 TODO:
-    1. synset comparison problem, line 98
-    2. cetegorization, classification, sequences
+    1. categorization & classification
+    2. wordnet.synsets
+    3. nltk.Text
+        3.1 concordance # every occurance of the most common word in context
+        3.2 lexical diversity # round(len(set(textT))/len(textT)*100, 2)
+        3.3 collocations # frequent bigrams
+    4.
 
 
 

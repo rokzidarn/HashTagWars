@@ -75,37 +75,47 @@ def getAllTokensFromHashtag(hashtagTweets):
             all.append(token)
     return all
 
-def getFunnyTweetsInHashtag(hashtagTweets): # score > 0
+def getTweetsInHashtagByScore(hashtagTweets): # score > 0
     funny = []
+    notfunny = []
     for tweet in hashtagTweets:
         if tweet.score > 0:
             funny.append(tweet)
-    return funny
+        else:
+            notfunny.append(tweet)
+    return [notfunny, funny]
 
-def processTweets(hashtagTweets):  # basic data, frequency, important words
+def processTweets(hashtagTweets):  # basic data, frequency, important words, synsets
     print(hashtagTweets[0].hashtag)
     list = getAllTokensFromHashtag(hashtagTweets)
     freq = nltk.FreqDist(list)
-    mostCommonWord = sorted(freq.items(), key = lambda x: x[1], reverse = True)[:2]
-    print("Most common word: {}".format(mostCommonWord[0][0]))
+    mostCommonWords = sorted(freq.items(), key = lambda x: x[1], reverse = True)[:2]
+    print("2 most common word: {}, {}".format(mostCommonWords[0][0], mostCommonWords[1][0]))
 
-    synset1 = nltk.corpus.wordnet.synsets(mostCommonWord[0][0])
-    synset2 = nltk.corpus.wordnet.synsets(mostCommonWord[1][0])
-    if (len(synset1) > 0 ):
+    synset1 = nltk.corpus.wordnet.synsets(mostCommonWords[0][0])
+    synset2 = nltk.corpus.wordnet.synsets(mostCommonWords[1][0])
+    if (len(synset1) > 0 and len(synset2) > 0):
         synonyms = []
         for lemma in synset1[0].lemmas():  # first synset only
             synonyms.append(lemma.name())
-        print("Synonyms:  '{}'".format(set(synonyms)))
-        #if(len(synset2) > 0):
-            #print("2 most common words similarity: {} vs. {}: {:.2}".format(mostCommonWord[0][0], mostCommonWord[1][0],synset1[0].wup_similarity(synset2[0])))
+        print("{} synonyms:  '{}'".format(mostCommonWords[0][0],set(synonyms)))
+        for lemma in synset2[0].lemmas():  # first synset only
+            synonyms.append(lemma.name())
+        print("{} synonyms:  '{}'".format(mostCommonWords[1][0], set(synonyms)))
+
+        sim = synset1[0].wup_similarity(synset2[0])
+        if(sim is not None):
+            sim = float(sim)
+            print("2 most common words similarity: {} vs. {}: {:.2}"
+                  .format(mostCommonWords[0][0], mostCommonWords[1][0],sim))
     else:
-        print("Synonyms:  /")
+        print("Similarity:  / - word not found in synset")
 
 # --------------------------------------------------------------------------------
 # main
 dataList = [] # 2D list, [hashtag][tweet]
 hashtags = [] # list of all hashtags
-subdirectory = "test_data/"
+subdirectory = "train_data/"
 for f in os.listdir(os.getcwd()+"/"+subdirectory):  # preprocessing
     hashtag = "#"+str(os.path.basename(f)[:-4].replace("_", ""))
     hashtags.append(hashtag)
@@ -121,7 +131,7 @@ for f in os.listdir(os.getcwd()+"/"+subdirectory):  # preprocessing
 for i in range(len(dataList)):  # process each category (hashtag) separately
     hashtagTweets = dataList[i] # tweets from the same hashtag
     #processTweets(hashtagTweets)
-    funnyTweets = getFunnyTweetsInHashtag(hashtagTweets)
-    #printData(funnyTweets)
-    processTweets(funnyTweets)
+    tweetsByScore = getTweetsInHashtagByScore(hashtagTweets)  # 0 == not funny, 1 == funnny
+    #printData(tweetsByScore)
+    processTweets(tweetsByScore[0])
     print("-----------------------------")
