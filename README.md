@@ -21,5 +21,10 @@ TODO:
         3.3 collocations # frequent bigrams
     4.
 
-
-
+IDEAS:
+    1. tweet topic clustering
+    2. find funniest words for each cluster
+    3. count funny words in tweets
+    4. analysis of the funniest tweets
+    5. sarcasm detector (?)
+    6. pun database (http://www.punoftheday.com/cgi-bin/findpuns.pl?q=dog&opt=text&submit=+Go%21+)
