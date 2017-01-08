@@ -9,6 +9,8 @@ import numpy
 import sklearn
 import os
 import string
+from bs4 import BeautifulSoup
+import requests
 
 #  --------------------------------------------------------------------------------
 # classes
@@ -110,6 +112,17 @@ def processTweets(hashtagTweets):  # basic data, frequency, important words, syn
                   .format(mostCommonWords[0][0], mostCommonWords[1][0],sim))
     else:
         print("Similarity:  / - word not found in synset")
+
+# returns a list of puns from url
+# url = "http://www.punoftheday.com/cgi-bin/findpuns.pl?q=dog"
+def getPuns(url):
+    puns = []
+    r = requests.get(url)
+    data = r.text
+    soup = BeautifulSoup(data, "lxml")
+    for link in soup.find_all('td')[1::2]:
+        puns.append(link.get_text())
+    return puns
 
 # --------------------------------------------------------------------------------
 # main
