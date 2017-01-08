@@ -87,7 +87,7 @@ def getTweetsInHashtagByScore(hashtagTweets): # score > 0
             notfunny.append(tweet)
     return [notfunny, funny]
 
-def processTweets(hashtagTweets):  # basic data, frequency, important words, synsets
+def analyzeCommonWords(hashtagTweets):  # basic data, frequency, common words, synsets
     print(hashtagTweets[0].hashtag)
     list = getAllTokensFromHashtag(hashtagTweets)
     freq = nltk.FreqDist(list)
@@ -111,11 +111,12 @@ def processTweets(hashtagTweets):  # basic data, frequency, important words, syn
             print("2 most common words similarity: {} vs. {}: {:.2}"
                   .format(mostCommonWords[0][0], mostCommonWords[1][0],sim))
     else:
-        print("Similarity:  / - word not found in synset")
+        print("Similarity:  / - word not found in synset!")
 
-# returns a list of puns from url
-# url = "http://www.punoftheday.com/cgi-bin/findpuns.pl?q=dog"
-def getPuns(url):
+    return mostCommonWords[0][0]
+
+
+def getPuns(url):  # returns a list of puns from url
     puns = []
     r = requests.get(url)
     data = r.text
@@ -128,7 +129,7 @@ def getPuns(url):
 # main
 dataList = [] # 2D list, [hashtag][tweet]
 hashtags = [] # list of all hashtags
-subdirectory = "train_data/"
+subdirectory = "test_data/"
 for f in os.listdir(os.getcwd()+"/"+subdirectory):  # preprocessing
     hashtag = "#"+str(os.path.basename(f)[:-4].replace("_", ""))
     hashtags.append(hashtag)
@@ -146,5 +147,10 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     #processTweets(hashtagTweets)
     tweetsByScore = getTweetsInHashtagByScore(hashtagTweets)  # 0 == not funny, 1 == funnny
     #printData(tweetsByScore)
-    processTweets(tweetsByScore[0])
+    mostCommonWord = analyzeCommonWords(tweetsByScore[0])
+    punsOfMostCommonWord = getPuns("http://www.punoftheday.com/cgi-bin/findpuns.pl?q="+mostCommonWord+"&opt=text&submit=+Go%21+")
+    if(len(punsOfMostCommonWord) > 0):
+        print("Pun example ({}): {}".format(mostCommonWord, punsOfMostCommonWord[0]))
+    else:
+        print("No puns found!")
     print("-----------------------------")
