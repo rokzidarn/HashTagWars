@@ -8,10 +8,6 @@ SemEval 2017 Challenge - Task 6
  - GOAL: characterize the sense of humour, predict which tweet will be funny within the hashtag (theme)
     predictive model, pairwise comparison, external knowledge
 
-OBSERVATIONS:
-- sex, drugs, stereotypes related == funny (2)
-- stemming, tfidf, sequence tagging -> useless?
-
 TODO:
     1. categorization & classification
     2. wordnet.synsets

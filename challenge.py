@@ -133,7 +133,7 @@ def processPuns(mostCommonWord):
         #print("No puns found!")
         return None
 
-# FEATURE FUNCTIONS - CLASSIFICATION
+# CLASSIFICATION
 def numOfCapitalLettersFF(text):
     tokens = nltk.word_tokenize(text)
     up = 0
@@ -207,13 +207,72 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
         scores = sklearn.model_selection.cross_val_score(clf, X, y, cv=5, scoring=scoring)
         print(scores)
 
+# CLUSTERING
+def tokenizeHashtag(rawHashtags):
+    all = []
+    for hashtag in rawHashtags:
+        tokens = hashtag.split("_")
+        for token in tokens:
+            all.append(token)
+
+    from nltk.stem.snowball import SnowballStemmer
+    stemmer = SnowballStemmer("english")
+    stopwords = nltk.corpus.stopwords.words('english')
+    stems = [stemmer.stem(t) for t in all if t not in stopwords]
+    return stems
+
+def hashtagClustering(rawHashtags, numClusters):
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    tfidf_vectorizer = TfidfVectorizer(
+        max_df=0.8,
+        max_features=200,  # max number of words
+        min_df=0.2,
+        stop_words='english',
+        use_idf=True,
+        tokenizer=tokenizeHashtag,
+        ngram_range=(1, 3))
+
+    tfidf_matrix = tfidf_vectorizer.fit_transform(rawHashtags)
+    from sklearn.cluster import KMeans
+    km = KMeans(n_clusters=numClusters)  # test different number of clusters
+    km.fit(tfidf_matrix)
+
+    clusters = km.labels_.tolist()
+    #print("Clusters: {}".format(clusters))
+    visualizeDendrogram(tfidf_matrix)
+
+def visualizeDendrogram(tfidf_matrix):
+    from sklearn.metrics.pairwise import cosine_similarity
+    dist = 1 - cosine_similarity(tfidf_matrix)
+
+    from scipy.cluster.hierarchy import ward, dendrogram
+    linkage_matrix = ward(dist)
+
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(30, 40))  # set size
+    ax = dendrogram(linkage_matrix, orientation="right", labels=rawHashtags)
+
+    plt.tick_params(
+        axis='x',
+        which='both',
+        bottom='off',
+        top='off',
+        labelbottom='off')
+
+    #plt.tight_layout()
+    plt.show()
+    # plt.savefig('ward_clusters.png', dpi=200) # save figure as ward_clusters
+    plt.close()
+
 # --------------------------------------------------------------------------------
 # main
-dataList = [] # 2D list, [hashtag][tweet]
-hashtags = [] # list of all hashtags
+dataList = []  # 2D list, [hashtag][tweet]
+hashtags = []  # list of all hashtags
+rawHashtags = []  # raw hashtags, easier to tokenize in clustering
 subdirectory = "test_data/"
 for f in os.listdir(os.getcwd()+"/"+subdirectory):  # preprocessing
     hashtag = "#"+str(os.path.basename(f)[:-4].replace("_", ""))
+    rawHashtags.append(os.path.basename(f)[:-4])
     hashtags.append(hashtag)
     text = readFileByLineAndTokenize(f, subdirectory)
     tweets = filterText(text)
@@ -230,5 +289,7 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     #printData(tweetsByScore)
     mostCommonWord = analyzeCommonWords(hashtagTweets)
     #print(mostCommonWord)
-    classifyTweetsByHashtag(hashtagTweets, mostCommonWord)
-    print("-----------------------------")
+    #classifyTweetsByHashtag(hashtagTweets, mostCommonWord)
+    #print("-----------------------------")
+
+hashtagClustering(rawHashtags, 7)
