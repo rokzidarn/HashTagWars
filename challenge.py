@@ -88,11 +88,11 @@ def getTweetsInHashtagByScore(hashtagTweets): # score > 0
     return [notfunny, funny]
 
 def analyzeCommonWords(hashtagTweets):  # basic data, frequency, common words, synsets
-    print(hashtagTweets[0].hashtag)
+    #print(hashtagTweets[0].hashtag)
     list = getAllTokensFromHashtag(hashtagTweets)
     freq = nltk.FreqDist(list)
     mostCommonWords = sorted(freq.items(), key = lambda x: x[1], reverse = True)[:2]
-    print("2 most common word: {}, {}".format(mostCommonWords[0][0], mostCommonWords[1][0]))
+    #print("2 most common word: {}, {}".format(mostCommonWords[0][0], mostCommonWords[1][0]))
 
     synset1 = nltk.corpus.wordnet.synsets(mostCommonWords[0][0])
     synset2 = nltk.corpus.wordnet.synsets(mostCommonWords[1][0])
@@ -100,21 +100,20 @@ def analyzeCommonWords(hashtagTweets):  # basic data, frequency, common words, s
         synonyms = []
         for lemma in synset1[0].lemmas():  # first synset only
             synonyms.append(lemma.name())
-        print("{} synonyms:  '{}'".format(mostCommonWords[0][0],set(synonyms)))
+        #print("{} synonyms:  '{}'".format(mostCommonWords[0][0],set(synonyms)))
         for lemma in synset2[0].lemmas():  # first synset only
             synonyms.append(lemma.name())
-        print("{} synonyms:  '{}'".format(mostCommonWords[1][0], set(synonyms)))
+        #print("{} synonyms:  '{}'".format(mostCommonWords[1][0], set(synonyms)))
 
         sim = synset1[0].wup_similarity(synset2[0])
         if(sim is not None):
             sim = float(sim)
-            print("2 most common words similarity: {} vs. {}: {:.2}"
-                  .format(mostCommonWords[0][0], mostCommonWords[1][0],sim))
+            #print("2 most common words similarity: {} vs. {}: {:.2}".format(mostCommonWords[0][0], mostCommonWords[1][0],sim))
     else:
-        print("Similarity:  / - word not found in synset!")
+        sim = False
+        #print("Similarity:  / - word not found in synset!")
 
     return mostCommonWords[0][0]
-
 
 def getPuns(url):  # returns a list of puns from url
     puns = []
@@ -124,6 +123,89 @@ def getPuns(url):  # returns a list of puns from url
     for link in soup.find_all('td')[1::2]:
         puns.append(link.get_text())
     return puns
+
+def processPuns(mostCommonWord):
+    punsOfMostCommonWord = getPuns("http://www.punoftheday.com/cgi-bin/findpuns.pl?q=" + mostCommonWord + "&opt=text&submit=+Go%21+")
+    if (len(punsOfMostCommonWord) > 0):
+        #print("Pun example ({}): {}".format(mostCommonWord, punsOfMostCommonWord[0]))
+        return punsOfMostCommonWord[0]
+    else:
+        #print("No puns found!")
+        return None
+
+# FEATURE FUNCTIONS - CLASSIFICATION
+def numOfCapitalLettersFF(text):
+    tokens = nltk.word_tokenize(text)
+    up = 0
+    for token in tokens:
+        for char in token:
+            if(char.isupper()):
+                up += 1
+    return up
+
+def numOfStopWordsFF(text):
+    tokens = nltk.word_tokenize(text)
+    stop = 0
+    stopWords = nltk.corpus.stopwords.words('english')
+    for token in tokens:
+        if token in stopWords:
+            stop += 1
+    return stop
+
+def containsPunctuationFF(text):
+    tokens = nltk.word_tokenize(text)
+    for token in tokens:
+        if token in string.punctuation:
+            return True
+    return False
+
+def numOfLemmasFF(tokens):
+    return len(tokens)
+
+def containsMostCommonWordFF(tokens, mostCommonWord):
+    if(mostCommonWord in tokens):
+        return True
+    return False
+
+def cosineSimilarityToPunFF(text, pun):
+    if(pun is not None):
+        vect = sklearn.feature_extraction.text.TfidfVectorizer()
+        tfidf = vect.fit_transform([text, pun])
+        cosine = (tfidf * tfidf.T).A # if cosine > 0.7: return True else: return false
+        return cosine[0][1]
+    else:
+        return 0
+
+def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
+    features = []
+    classes = []
+    pun = processPuns(mostCommonWord)
+
+    for tweet in hashtagTweets:
+        curr = []  # features of current tweet, FF - feature functions
+        curr.append(numOfCapitalLettersFF(tweet.text))
+        curr.append(numOfStopWordsFF(tweet.text))
+        curr.append(containsPunctuationFF(tweet.text))
+        curr.append(numOfLemmasFF(tweet.tokens))
+        curr.append(containsMostCommonWordFF(tweet.tokens, mostCommonWord))
+        curr.append(cosineSimilarityToPunFF(tweet.text, pun))
+
+        features.append(curr)
+        score = tweet.score
+        if(score == 2):  # problem, beacuse there is only one representative of "super" funny
+            score = 1
+        classes.append(score)
+
+    (X, y) = (numpy.array(features), numpy.array(classes))
+    print(("Dataset shape: {}".format((X.shape, y.shape))))
+    from sklearn.naive_bayes import MultinomialNB
+    clf = MultinomialNB(alpha=.01)
+    clf.fit(X, y)
+
+    scorings = ["accuracy"]  # "precision_weighted", "recall_weighted", "f1_weighted"
+    for scoring in scorings:
+        scores = sklearn.model_selection.cross_val_score(clf, X, y, cv=5, scoring=scoring)
+        print(scores)
 
 # --------------------------------------------------------------------------------
 # main
@@ -143,14 +225,10 @@ for f in os.listdir(os.getcwd()+"/"+subdirectory):  # preprocessing
     #printData(hashtagTweets)
 
 for i in range(len(dataList)):  # process each category (hashtag) separately
-    hashtagTweets = dataList[i] # tweets from the same hashtag
-    #processTweets(hashtagTweets)
-    tweetsByScore = getTweetsInHashtagByScore(hashtagTweets)  # 0 == not funny, 1 == funnny
+    hashtagTweets = dataList[i]  # tweets from the same hashtag
+    #tweetsByScore = getTweetsInHashtagByScore(hashtagTweets)  # 0 == not funny, 1 == funnny
     #printData(tweetsByScore)
-    mostCommonWord = analyzeCommonWords(tweetsByScore[0])
-    punsOfMostCommonWord = getPuns("http://www.punoftheday.com/cgi-bin/findpuns.pl?q="+mostCommonWord+"&opt=text&submit=+Go%21+")
-    if(len(punsOfMostCommonWord) > 0):
-        print("Pun example ({}): {}".format(mostCommonWord, punsOfMostCommonWord[0]))
-    else:
-        print("No puns found!")
+    mostCommonWord = analyzeCommonWords(hashtagTweets)
+    #print(mostCommonWord)
+    classifyTweetsByHashtag(hashtagTweets, mostCommonWord)
     print("-----------------------------")
