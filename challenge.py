@@ -292,4 +292,4 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     #classifyTweetsByHashtag(hashtagTweets, mostCommonWord)
     #print("-----------------------------")
 
-hashtagClustering(rawHashtags, 7)
+hashtagClustering(rawHashtags, 6)
