@@ -189,6 +189,17 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
         curr.append(numOfLemmasFF(tweet.tokens))
         curr.append(containsMostCommonWordFF(tweet.tokens, mostCommonWord))
         curr.append(cosineSimilarityToPunFF(tweet.text, pun))
+        # slangFF
+        # profanityFF
+        # lastna imena ljudi, podjetij...
+        # number of positive, negative words -> polarity factor?? pos/neg??
+        # perplexity of a tweet -> bigger == humour
+        # number of POS tags a token (word) can have -> more == ambiguity (sarcasm)
+        # hypernym distance between synsets (2 verbs/nouns -> get hypernym -> distance between synsets); large distance == humour
+        # lexical diversity per tweet -> larger == humour
+        # tokens from hashtag ->  synset(token, tweet) -> wup_similarity -> max -> semantic relatedness -> lower == humour
+        # from humour recognition...page 7: sentence complexity
+        # pos tagging of tweet, counting tags -> calculate sentence complexity??
 
         features.append(curr)
         score = tweet.score
