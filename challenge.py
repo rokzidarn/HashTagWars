@@ -11,6 +11,7 @@ import os
 import string
 from bs4 import BeautifulSoup
 import requests
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 #  --------------------------------------------------------------------------------
 # classes
@@ -176,6 +177,14 @@ def cosineSimilarityToPunFF(text, pun):
     else:
         return 0
 
+def getSentimentScores(text):   # returns scores for positive, negative and neutral sentiment
+    sid = SentimentIntensityAnalyzer()
+    ss = sid.polarity_scores(text)
+    positive = ss["pos"]
+    negative = ss["neg"]
+    neutral = ss["neu"]
+    return [positive, negative, neutral]
+
 def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
     features = []
     classes = []
@@ -189,6 +198,10 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
         curr.append(numOfLemmasFF(tweet.tokens))
         curr.append(containsMostCommonWordFF(tweet.tokens, mostCommonWord))
         curr.append(cosineSimilarityToPunFF(tweet.text, pun))
+        sentimentScores = getSentimentScores(tweet.text)
+        curr.append(sentimentScores[0])
+        curr.append(sentimentScores[1])
+        curr.append(sentimentScores[2])
         # slangFF
         # profanityFF
         # lastna imena ljudi, podjetij...
