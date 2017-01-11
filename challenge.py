@@ -177,13 +177,12 @@ def cosineSimilarityToPunFF(text, pun):
     else:
         return 0
 
-def getSentimentScores(text):   # returns scores for positive, negative and neutral sentiment
+def getSentimentScores(text):   # returns scores for positive, negative sentiment
     sid = SentimentIntensityAnalyzer()
     ss = sid.polarity_scores(text)
     positive = ss["pos"]
     negative = ss["neg"]
-    neutral = ss["neu"]
-    return [positive, negative, neutral]
+    return [positive, negative]
 
 def containsProfanity(text, profanityWords):	# returns number of bad words in a text
     badWordCounter = 0
@@ -200,16 +199,52 @@ def containsNegativeWords(text, negativeWords):
             return True
     return False
 
-def containsSlangWords(text, slangWords):
+def positiveToNegativeWordRatio(text, negativeWords, positiveWords):
+    negative = 0
+    positive = 0
     tokens = nltk.word_tokenize(text)
     for token in tokens:
-        if token in slangWords:
-            return True
-    return False
+        if token in negativeWords:
+            negative += 1
+        elif token in positiveWords:
+            positive += 1
+    if(positive == 0 or negative == 0):
+        return 1  # non humour, equal
+    else:
+        return positive/negative
+
+def calculatePerplexity(text, tokens):  # not working
+    ngram = nltk.model.ngram.NgramModel(2, tokens)
+    perplexity = ngram.perplexity(text)
+    return perplexity
+
+def calculateLexicalDiversity(text):
+    textT = nltk.Text(text)
+    if(len(textT) == 0):
+        return 0
+    return round(len(set(textT)) / len(textT) * 100, 2)
+
+def maxPOSTags(tokens):  # not working, want to get all possible for token
+    for token in tokens:
+        postag = nltk.tag.pos_tag([token])
+        print(postag)
+
+def calculateVerbToNounRatio(tokens):
+    nouns = 0
+    verbs = 0
+    for token in tokens:
+        postag = nltk.tag.pos_tag([token])[1]
+        if(postag == 'NN'):
+            nouns += 1
+        elif(postag == 'VB'):
+            verbs += 1
+    if(verbs == 0 or nouns == 0):
+        return 0
+    else:
+        return verbs/nouns
 
 
-
-def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, slangWords, negativeWords):
+def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negativeWords, positiveWords):
     features = []
     classes = []
     pun = processPuns(mostCommonWord)
@@ -223,13 +258,15 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, slang
         curr.append(containsMostCommonWordFF(tweet.tokens, mostCommonWord))
         curr.append(cosineSimilarityToPunFF(tweet.text, pun))
         sentimentScores = getSentimentScores(tweet.text)
-        #curr.append(sentimentScores[0])
+        curr.append(sentimentScores[0])
         curr.append(sentimentScores[1])
-        #curr.append(sentimentScores[2])
         curr.append(containsProfanity(tweet.text, profanityWords))
         curr.append(containsNegativeWords(tweet.text, negativeWords))
-        curr.append(containsSlangWords(tweet.text, slangWords))
-
+        #curr.append(calculatePerplexity(tweet.text, tweet.tokens))
+        curr.append(calculateLexicalDiversity(tweet.text))
+        #curr.append(maxPOSTags(tweet.tokens))
+        curr.append(calculateVerbToNounRatio(tweet.tokens))
+        curr.append(positiveToNegativeWordRatio(tweet.text, negativeWords, positiveWords))
 
         features.append(curr)
         score = tweet.score
@@ -314,11 +351,11 @@ def getWordData():
         negativeWords = f.readlines()
     negativeWords = [line.strip('\n') for line in negativeWords]
 
-    with open("word_data/slang-words.txt") as f:
-        slangWords = f.readlines()
-    slangWords = [line.strip('\n') for line in slangWords]
+    with open("word_data/positive-words.txt") as f:
+        positiveWords = f.readlines()
+    positiveWords = [line.strip('\n') for line in positiveWords]
 
-    return [profanityWords, slangWords, negativeWords]
+    return [profanityWords, negativeWords, positiveWords]
 
 # --------------------------------------------------------------------------------
 # main
@@ -346,4 +383,3 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     #print(mostCommonWord)
     classifyTweetsByHashtag(hashtagTweets, mostCommonWord, wordData[0], wordData[1], wordData[2])
     #print("-----------------------------")
-
