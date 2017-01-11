@@ -185,10 +185,21 @@ def getSentimentScores(text):   # returns scores for positive, negative and neut
     neutral = ss["neu"]
     return [positive, negative, neutral]
 
+def numOfBadWords(text, badWordList):	# returns number of bad words in a text
+    badWordCounter = 0
+    tokens = nltk.word_tokenize(text)
+    for token in tokens:
+        if token in badWordList:
+            badWordCounter += 1
+    return badWordCounter
+
 def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
     features = []
     classes = []
     pun = processPuns(mostCommonWord)
+    with open("bad-words.txt") as f:
+		badWords = f.readlines()
+	badWords = [line.strip('\n') for line in badWords]
 
     for tweet in hashtagTweets:
         curr = []  # features of current tweet, FF - feature functions
@@ -202,6 +213,7 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
         curr.append(sentimentScores[0])
         curr.append(sentimentScores[1])
         curr.append(sentimentScores[2])
+        curr.append(numOfBadWords(tweet.text, badWords))
 
         features.append(curr)
         score = tweet.score
