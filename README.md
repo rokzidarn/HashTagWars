@@ -9,7 +9,7 @@ SemEval 2017 Challenge - Task 6
     predictive model, pairwise comparison, external knowledge
 
 
-    twython not installed??
+    twython not installed?? this is thrown by vader import, it doesn't seem to affect performance
 
 TODO:
     # clustering hashtags, sysnsets to define similiar hashtags -> classify only with them

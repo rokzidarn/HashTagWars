@@ -12,6 +12,7 @@ import string
 from bs4 import BeautifulSoup
 import requests
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from nltk.tokenize import TweetTokenizer
 
 #  --------------------------------------------------------------------------------
 # classes
@@ -243,8 +244,16 @@ def calculateVerbToNounRatio(tokens):
     else:
         return verbs/nouns
 
+def containsEmoticons(text, emoticonList):
+    tweetTokenizer = TweetTokenizer()
+    tokens = tweetTokenizer.tokenize(text)
+    for token in tokens:
+        if token in emoticonList:
+            return True
+    return False
 
-def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negativeWords, positiveWords):
+
+def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negativeWords, positiveWords, emoticons):
     features = []
     classes = []
     pun = processPuns(mostCommonWord)
@@ -262,6 +271,7 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negat
         curr.append(sentimentScores[1])
         curr.append(containsProfanity(tweet.text, profanityWords))
         curr.append(containsNegativeWords(tweet.text, negativeWords))
+        curr.append(containsEmoticons(tweet.text, emoticons))
         #curr.append(calculatePerplexity(tweet.text, tweet.tokens))
         curr.append(calculateLexicalDiversity(tweet.text))
         #curr.append(maxPOSTags(tweet.tokens))
@@ -355,7 +365,11 @@ def getWordData():
         positiveWords = f.readlines()
     positiveWords = [line.strip('\n') for line in positiveWords]
 
-    return [profanityWords, negativeWords, positiveWords]
+    with open("word_data/emoticons.txt") as f:
+        emoticons = f.readlines()
+    emoticons = [line.strip('\n') for line in emoticons]
+
+    return [profanityWords, negativeWords, positiveWords, emoticons]
 
 # --------------------------------------------------------------------------------
 # main
@@ -381,5 +395,5 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     #printData(tweetsByScore)
     mostCommonWord = analyzeCommonWords(hashtagTweets)
     #print(mostCommonWord)
-    classifyTweetsByHashtag(hashtagTweets, mostCommonWord, wordData[0], wordData[1], wordData[2])
+    classifyTweetsByHashtag(hashtagTweets, mostCommonWord, wordData[0], wordData[1], wordData[2], wordData[3])
     #print("-----------------------------")
