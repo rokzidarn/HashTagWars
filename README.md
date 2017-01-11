@@ -8,12 +8,15 @@ SemEval 2017 Challenge - Task 6
  - GOAL: characterize the sense of humour, predict which tweet will be funny within the hashtag (theme)
     predictive model, pairwise comparison, external knowledge
 
+
+    twython not installed??
+
 TODO:
     # clustering hashtags, sysnsets to define similiar hashtags -> classify only with them
     # feature functions:
         dataset - slang
         dataset - profanity
-        dataset - gazetter (lastna imena)
+        dataset - gazetter (lastna imena) -> nltk.gazetter
         dataset - number of positive, negative words -> polarity factor (pos/neg) -> ~1 == non humour
         perplexity of a tweet -> bigger == humour
         number of POS tags a token (word) can have -> more == ambiguity (sarcasm)

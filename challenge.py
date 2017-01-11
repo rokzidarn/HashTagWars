@@ -185,21 +185,34 @@ def getSentimentScores(text):   # returns scores for positive, negative and neut
     neutral = ss["neu"]
     return [positive, negative, neutral]
 
-def numOfBadWords(text, badWordList):	# returns number of bad words in a text
+def containsProfanity(text, profanityWords):	# returns number of bad words in a text
     badWordCounter = 0
     tokens = nltk.word_tokenize(text)
     for token in tokens:
-        if token in badWordList:
-            badWordCounter += 1
-    return badWordCounter
+        if token in profanityWords:
+            return True
+    return False
 
-def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
+def containsNegativeWords(text, negativeWords):
+    tokens = nltk.word_tokenize(text)
+    for token in tokens:
+        if token in negativeWords:
+            return True
+    return False
+
+def containsSlangWords(text, slangWords):
+    tokens = nltk.word_tokenize(text)
+    for token in tokens:
+        if token in slangWords:
+            return True
+    return False
+
+
+
+def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, slangWords, negativeWords):
     features = []
     classes = []
     pun = processPuns(mostCommonWord)
-    with open("bad-words.txt") as f:
-		badWords = f.readlines()
-	badWords = [line.strip('\n') for line in badWords]
 
     for tweet in hashtagTweets:
         curr = []  # features of current tweet, FF - feature functions
@@ -210,10 +223,13 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord):
         curr.append(containsMostCommonWordFF(tweet.tokens, mostCommonWord))
         curr.append(cosineSimilarityToPunFF(tweet.text, pun))
         sentimentScores = getSentimentScores(tweet.text)
-        curr.append(sentimentScores[0])
+        #curr.append(sentimentScores[0])
         curr.append(sentimentScores[1])
-        curr.append(sentimentScores[2])
-        curr.append(numOfBadWords(tweet.text, badWords))
+        #curr.append(sentimentScores[2])
+        curr.append(containsProfanity(tweet.text, profanityWords))
+        curr.append(containsNegativeWords(tweet.text, negativeWords))
+        curr.append(containsSlangWords(tweet.text, slangWords))
+
 
         features.append(curr)
         score = tweet.score
@@ -289,6 +305,21 @@ def visualizeDendrogram(tfidf_matrix):
     # plt.savefig('ward_clusters.png', dpi=200) # save figure as ward_clusters
     plt.close()
 
+def getWordData():
+    with open("word_data/profanity-words.txt") as f:
+        profanityWords = f.readlines()
+    profanityWords = [line.strip('\n') for line in profanityWords]
+
+    with open("word_data/negative-words.txt") as f:
+        negativeWords = f.readlines()
+    negativeWords = [line.strip('\n') for line in negativeWords]
+
+    with open("word_data/slang-words.txt") as f:
+        slangWords = f.readlines()
+    slangWords = [line.strip('\n') for line in slangWords]
+
+    return [profanityWords, slangWords, negativeWords]
+
 # --------------------------------------------------------------------------------
 # main
 dataList = []  # 2D list, [hashtag][tweet]
@@ -304,9 +335,8 @@ for f in os.listdir(os.getcwd()+"/"+subdirectory):  # preprocessing
     hashtagList = createData(tweets, hashtag)
     dataList.append(hashtagList)
 
-#for h in range(len(hashtags)):
-    #hashtagTweets = dataList[h]
-    #printData(hashtagTweets)
+wordData = getWordData()
+#hashtagClustering(rawHashtags, 6)
 
 for i in range(len(dataList)):  # process each category (hashtag) separately
     hashtagTweets = dataList[i]  # tweets from the same hashtag
@@ -314,7 +344,6 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     #printData(tweetsByScore)
     mostCommonWord = analyzeCommonWords(hashtagTweets)
     #print(mostCommonWord)
-    #classifyTweetsByHashtag(hashtagTweets, mostCommonWord)
+    classifyTweetsByHashtag(hashtagTweets, mostCommonWord, wordData[0], wordData[1], wordData[2])
     #print("-----------------------------")
 
-hashtagClustering(rawHashtags, 6)
