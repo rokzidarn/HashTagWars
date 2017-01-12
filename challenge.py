@@ -89,32 +89,11 @@ def getTweetsInHashtagByScore(hashtagTweets): # score > 0
             notfunny.append(tweet)
     return [notfunny, funny]
 
-def analyzeCommonWords(hashtagTweets):  # basic data, frequency, common words, synsets
-    #print(hashtagTweets[0].hashtag)
+def getMostCommonWords(hashtagTweets):  # basic data, frequency, common words
     list = getAllTokensFromHashtag(hashtagTweets)
     freq = nltk.FreqDist(list)
     mostCommonWords = sorted(freq.items(), key = lambda x: x[1], reverse = True)[:2]
     #print("2 most common word: {}, {}".format(mostCommonWords[0][0], mostCommonWords[1][0]))
-
-    synset1 = nltk.corpus.wordnet.synsets(mostCommonWords[0][0])
-    synset2 = nltk.corpus.wordnet.synsets(mostCommonWords[1][0])
-    if (len(synset1) > 0 and len(synset2) > 0):
-        synonyms = []
-        for lemma in synset1[0].lemmas():  # first synset only
-            synonyms.append(lemma.name())
-        #print("{} synonyms:  '{}'".format(mostCommonWords[0][0],set(synonyms)))
-        for lemma in synset2[0].lemmas():  # first synset only
-            synonyms.append(lemma.name())
-        #print("{} synonyms:  '{}'".format(mostCommonWords[1][0], set(synonyms)))
-
-        sim = synset1[0].wup_similarity(synset2[0])
-        if(sim is not None):
-            sim = float(sim)
-            #print("2 most common words similarity: {} vs. {}: {:.2}".format(mostCommonWords[0][0], mostCommonWords[1][0],sim))
-    else:
-        sim = False
-        #print("Similarity:  / - word not found in synset!")
-
     return mostCommonWords[0][0]
 
 def getPuns(url):  # returns a list of puns from url
@@ -185,8 +164,7 @@ def getSentimentScores(text):   # returns scores for positive, negative sentimen
     negative = ss["neg"]
     return [positive, negative]
 
-def containsProfanity(text, profanityWords):	# returns number of bad words in a text
-    badWordCounter = 0
+def containsProfanity(text, profanityWords):
     tokens = nltk.word_tokenize(text)
     for token in tokens:
         if token in profanityWords:
@@ -234,7 +212,7 @@ def calculateVerbToNounRatio(tokens):
     nouns = 0
     verbs = 0
     for token in tokens:
-        postag = nltk.tag.pos_tag([token])[1]
+        postag = nltk.tag.pos_tag([token])[0][1]
         if(postag == 'NN'):
             nouns += 1
         elif(postag == 'VB'):
@@ -252,6 +230,17 @@ def containsEmoticons(text, emoticonList):
             return True
     return False
 
+def calculateSemanticRelatedness(hashtagTokens, textTokens):  # get tokens from hashtag + test
+    maxSR = 0
+    for htoken in hashtagTokens:
+        for token in textTokens:
+            synset1 = nltk.corpus.wordnet.synsets(htoken)
+            synset2 = nltk.corpus.wordnet.synsets(token)
+            if (len(synset1) > 0 and len(synset2) > 0):
+                sim = synset1[0].wup_similarity(synset2[0])
+                if (sim is not None and sim > maxSR):
+                    maxSR = sim
+    return maxSR
 
 def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negativeWords, positiveWords, emoticons):
     features = []
@@ -393,7 +382,6 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     hashtagTweets = dataList[i]  # tweets from the same hashtag
     #tweetsByScore = getTweetsInHashtagByScore(hashtagTweets)  # 0 == not funny, 1 == funnny
     #printData(tweetsByScore)
-    mostCommonWord = analyzeCommonWords(hashtagTweets)
-    #print(mostCommonWord)
+    mostCommonWord = getMostCommonWords(hashtagTweets)
     classifyTweetsByHashtag(hashtagTweets, mostCommonWord, wordData[0], wordData[1], wordData[2], wordData[3])
     #print("-----------------------------")
