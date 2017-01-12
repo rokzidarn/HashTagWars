@@ -380,6 +380,8 @@ def getSlangData():
         tmp = slangLine.split("`", 1)
         # if len(tmp) == 1:
             # print(tmp)
+        slangWords.append(tmp[0])
+        slangWordsNumOfMeanings.append(tmp[1].count("|") + 1)
     return [slangWords, slangWordsNumOfMeanings]
 
 # --------------------------------------------------------------------------------
