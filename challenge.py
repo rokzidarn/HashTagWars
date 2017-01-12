@@ -246,7 +246,6 @@ def containsSlang(text, slangList):
     tweetTokenizer = TweetTokenizer()
     tokens = tweetTokenizer.tokenize(text)
     for token in tokens:
-        print(token)
         if token in slangList:
             return True
     return False
