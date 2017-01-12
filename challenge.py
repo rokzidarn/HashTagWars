@@ -242,7 +242,16 @@ def calculateSemanticRelatedness(hashtagTokens, textTokens):  # get tokens from 
                     maxSR = sim
     return maxSR
 
-def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negativeWords, positiveWords, emoticons):
+def containsSlang(text, slangList):
+    tweetTokenizer = TweetTokenizer()
+    tokens = tweetTokenizer.tokenize(text)
+    for token in tokens:
+        print(token)
+        if token in slangList:
+            return True
+    return False
+
+def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negativeWords, positiveWords, emoticons, slangWords):
     features = []
     classes = []
     pun = processPuns(mostCommonWord)
@@ -266,6 +275,7 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negat
         #curr.append(maxPOSTags(tweet.tokens))
         curr.append(calculateVerbToNounRatio(tweet.tokens))
         curr.append(positiveToNegativeWordRatio(tweet.text, negativeWords, positiveWords))
+        curr.append(containsSlang(tweet.text, slangWords))
 
         features.append(curr)
         score = tweet.score
@@ -360,6 +370,18 @@ def getWordData():
 
     return [profanityWords, negativeWords, positiveWords, emoticons]
 
+def getSlangData():
+    slangWords = []
+    slangWordsNumOfMeanings = []
+    with open("word_data/slang_dict.doc") as f:
+        slang = f.readlines()
+    slang = [line.strip('\n') for line in slang]
+    for slangLine in slang:
+        tmp = slangLine.split("`", 1)
+        # if len(tmp) == 1:
+            # print(tmp)
+    return [slangWords, slangWordsNumOfMeanings]
+
 # --------------------------------------------------------------------------------
 # main
 dataList = []  # 2D list, [hashtag][tweet]
@@ -376,6 +398,7 @@ for f in os.listdir(os.getcwd()+"/"+subdirectory):  # preprocessing
     dataList.append(hashtagList)
 
 wordData = getWordData()
+slangData = getSlangData()
 #hashtagClustering(rawHashtags, 6)
 
 for i in range(len(dataList)):  # process each category (hashtag) separately
@@ -383,5 +406,5 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     #tweetsByScore = getTweetsInHashtagByScore(hashtagTweets)  # 0 == not funny, 1 == funnny
     #printData(tweetsByScore)
     mostCommonWord = getMostCommonWords(hashtagTweets)
-    classifyTweetsByHashtag(hashtagTweets, mostCommonWord, wordData[0], wordData[1], wordData[2], wordData[3])
+    classifyTweetsByHashtag(hashtagTweets, mostCommonWord, wordData[0], wordData[1], wordData[2], wordData[3], slangData[0])
     #print("-----------------------------")
