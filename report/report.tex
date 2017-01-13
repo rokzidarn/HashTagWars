@@ -14,6 +14,7 @@
 \usepackage{graphicx}
 \usepackage[colorinlistoftodos]{todonotes}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\lstset{language=Python} 
 
 \title{\#HashtagWars: Learning a sense of humor (SemEval 2017)}
 \author{Miha Pešič, Rok Zidarn}
@@ -147,14 +148,25 @@ Pri klasifikaciji smo uporabili večje število značilk, ki smo jih pridobili s
 	\begin{description}
 		\item Vsako besedo primerja z ostalimi iz teksta, pridobi njuna hipernima (nadpomenki) in v primeru, da imata ti besedi isto nadpomenko vrne logično vrednost true, drugače false
 	\end{description}
-
 \end{itemize}
+
+
+
+Nekatere izmed funkcij značilk so precej osnovne in nekako niso preveč v povezavi s samo detekcijo humorja, vendar smo jih kljub temu uporabili, zaradi preprostosti in radovednosti, ali so morda sploh uporabne. Sem spadajo na primer razmerja besed, ki se začnejo z veliko začetnico, razmerje lem, ali tvit vsebuje najbolj pogosto besedo in podobne. 
+
+Nekatere so malce bolj uporabne, vendar so bile kljub temu enostavno implementirane, na primer ali tvit vsebuje žaljive besede, kar je v današnjem svetu pogost pojav, saj se velikokrat tako le še poudari absurd ali ironija v šali. Za nekatere pa predvidevamo, da nam bodo dala precej globjo informacijo o humorju, ki ga morda vsebuje tvit, kot je na primer razmerje med negativnimi in pozitivnimi besedami, kajti za nekatere ša le je značilno bodisi so sarkastične, kjer se pojavljajo predvsem pozitivne besede ali negativne besede pri šalah o stereotipih. 
+
+Ker se pojavljajo v šalah tudi besedne igre, preverjamo ali obstajajo takšni zapisi že v neki bazi s temi podatki, tukaj računamo predvsem podobnost tvita, na podlagi TDIDF, z besednimi igrami s podobno vsebino in če sta si teksta podobno to morda nakazuje na šalo. Za izražanje dvoumnosti smo tudi uporabili postopek POS označevanja, saj lahko neko besedo morda uporabimo kot glagol, v šali pa pride do izraza kot samostalnik.
+
+Absurd je prav tako sestavni del šal, saj predstavlja neko hitro spremembo stanja, nerealno situacijo in temu je namenjena primerjava nadpomenk. Torej če je razdalja med synset-oma nadpomenk velika pomeni neko drastično spremembo v tekstu in s tem humor. Ironija se morda pojavlja v tvitih z uporabo emoticon-ov, ki predstavljajo čustva, nekdo lahko zapišemo neko precej negativno zadevo zraven pa izrazi pozitivno čustvo. Z izračunom semantične sorodnosti pa ciljamo predvsem na to, da humor vpliva tudi nepričakovanost, torej če ima nek tvit nizko semantično sorodnost to morda pomeni humor.
 
 \subsection{Klasifikacija}
 
-Na podlagi spisanih funkcij značilk bo delovala naša klasifikacija. Klasifikator oziroma model se bo na podlagi lastnosti, ki bodo definirana z značilkami ter predhodno definirano vrednostjo humorja tvita naučil, kako so zgrajeni smešni tviti in kako ne, ter bo napovedoval na testni množici podatkov. 
+Na podlagi spisanih funkcij značilk bo delovala naša klasifikacija. Klasifikator oziroma model se bo na podlagi lastnosti, ki bodo definirana z značilkami ter predhodno definirano vrednostjo humorja tvita naučil, kako so zgrajeni smešni tviti in kako ne, ter bo napovedoval na testni množici podatkov. Pri tem bomo uporabili klasifikacijsko metodo imenovano Naivni Bayes.
 
-Za klasifikacijo smo uporabili naivnega bayesa.
+Naivni Bayes je enostaven klasifikator, ki temelji na verjetnosti kateremu razredu pripada trenutni element, poleg tega predvideva neodvisnost dogodkov. Ker izračunavamo večje število značilk jih lahko uporabimo kot nek vektor, zato uporabljamo Multinomial Naive Bayes, ki nam nato vrne vektor verjetnosti, kjer neko število predstavlja, kolikšna je verjetnost, da ta element pripada določenemu razredu.
+
+Najprej se bomo na večji količini podatkov, ki so v direktoriju train\_data naučili oziroma bo to namesto nas storil klasifikator na podlagi značilk in njihovih vrednosti. Nato pa bomo napovedovali razred na podatkih iz direktorija trial\_data, katere nismo uporabili za učenje, vendar imajo kljub temu zraven zapisane ocene tvitov, na podlagi, katerih bomo nato ocenili uspešnost napovedovanja.
 
 \section{Results}
 
