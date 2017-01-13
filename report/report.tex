@@ -4,6 +4,7 @@
 \usepackage[english]{babel}
 \usepackage[utf8x]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{listings}
 
 %% Sets page size and margins
 \usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
@@ -26,11 +27,17 @@ Humor je eden izmed poglavitnih karakteristik človekovega obstoja in je morda c
 
 \section{Introduction}
 
-Na področju umetne inteligence in procesiranja naravnega jezika je napovedovanje in ocenjevanje humorja v tekstu ena izmed bolj zanimivih nalog v zadnjem času. Ljudem je ponavadi povsem jasno, kdaj gre za šalo in kdaj ne, vendar sistemom kot so računalniki pa ne povsem. Potrebno je neko predznanje o sami temi šale, humor se lahko stopnjuje, nadaljuje, pojavi se lahko sarkazem, ironija. Včasih pride do pretiravanja ali igre besed (ang. puns). Kljub temu, da že obstajajo neki algoritmi in klasifikatorji trenutno lahko napovedujejo zgolj binarni razred, ali je tekst smešen (da/ne). Zaželjeno bi torej bilo, da bi lahko ocenili stopnjo humorja (1-10), vendar tukaj se bomo osredotočili na napovedovanje binarnega razreda, smešno (da/ne). Uporabili bomo podatkovno zbirko tvitov, spisanih v oddaji \@midnight, kjer so podatki o temi (hashtag-u), tekstu tvita in oceni. Ocena je določena z eno izmed treh vrednosti, 0 pomeni, da tvit ni smešen, 1 pomeni, da je tvit smešen, 2 pa, da je tvit najbolj smešen v podani temi. Seveda ni nujno, da bomo iz teh podatkov zgradili dovolj dober klasifikator, kajti to oceno je podala zgolj majhna skupina ljudi in potrebno je zopet pudariti, da je humor subjektivna zadeva.
+Poročilo je razdeljeno na več poglavij. V prvem bomo predstavili uvod v problem s, katerim se bomo ukvarjali in malce osnov, ki se tičejo humorja in njegovih vrst. Nato bodo predstavljene metode s, katerimi smo se lotili reševanja problema, natančneje bo predstavljena tudi oblika podatkov, postopek predprocesiranja in ideja rešitve. V tretjem poglavju bomo predstavili rezultate, ki smo jih dobili in kaj ti rezultati sploh pomenijo. V zadnjem poglavju pa bomo primerjali našo rešitev z obstoječimi, predstavili bomo možne izboljšave in diskutirali rezultate.
+
+Na področju umetne inteligence in procesiranja naravnega jezika je napovedovanje in ocenjevanje humorja v tekstu ena izmed bolj zanimivih nalog v zadnjem času. Ljudem je ponavadi povsem jasno, kdaj gre za šalo in kdaj ne, vendar sistemom kot so računalniki pa ne povsem. Potrebno je neko predznanje o sami temi šale, humor se lahko stopnjuje, nadaljuje, pojavi se lahko sarkazem, ironija. Včasih pride do pretiravanja ali igre besed (ang. puns). Kljub temu, da že obstajajo neki algoritmi in klasifikatorji trenutno lahko napovedujejo zgolj binarni razred, ali je tekst smešen (da/ne). Zaželjeno bi torej bilo, da bi lahko ocenili stopnjo humorja (1-10), vendar tukaj se bomo osredotočili na napovedovanje binarnega razreda, smešno (da/ne). Uporabili bomo podatkovno zbirko tvitov, spisanih v oddaji \@midnight, kjer so podatki o temi (hashtag-u), tekstu tvita in oceni. Ocena je določena z eno izmed treh vrednosti, 0 pomeni, da tvit ni smešen, 1 pomeni, da je tvit smešen, 2 pa, da je tvit najbolj smešen v podani temi. Seveda ni nujno, da bomo iz teh podatkov zgradili dovolj dober klasifikator, kajti to oceno je podala zgolj majhna skupina ljudi in potrebno je zopet poudariti, da je humor subjektivna zadeva.
+
+V prvem pog
 
 \subsection{Humor}
 
-Ljudje smo družabna bitja, za obstoj potrebujemo druge in humor je eden izmed načinov povezovanja, kakor tudi način sproščanja. Humor je tesno povezan s smehom oziroma z dobrim počutjem, kajti med tem procesom se sproščajo endorfini, ki jim drugače rečemo hormon sreče. Glede na to, da je humor subjektiven imamo ljudje različne okuse humorja, nekaterim je nekaj smešno, drugim ne. Kar vpliva na to je morda socialni status, vzgoja, družba ali kultura, zaradi česar ne moremo humorja enostavno opisati oziroma formalno zapisati.
+Ljudje smo družabna bitja, za obstoj potrebujemo druge in humor je eden izmed načinov povezovanja, komunikacije, kakor tudi način sproščanja. Humor je tesno povezan s smehom oziroma z dobrim počutjem, kajti med tem procesom se sproščajo endorfini, ki jim drugače rečemo hormon sreče. Glede na to, da je humor subjektiven imamo ljudje različne okuse humorja, nekaterim je nekaj smešno, drugim ne. Kar vpliva na to je morda socialni status, vzgoja, družba ali kultura, zaradi česar ne moremo humorja enostavno opisati oziroma formalno zapisati.
+
+\newpage
 
 \subsection{Vrste pisanega humorja}
 
@@ -47,11 +54,33 @@ Poznamo več vrst zapisanega humorja, oziroma več značilk, ki opisujejo vrsto 
 
 \section{Methodology}
 
+Glavna metoda s katero smo se ukvarjali je bila klasifikacija. Namen je klasificirati oziroma določiti ali je neka vsebina smešna ali ne. Torej napovedovali smo binarni razred (smešno/ne) na podlagi podatkov, ki so zapisani v obliki tvitov. Problem smo poskušali rešiti tudi z uvrščanjem (angl. clustering), drugače pa je bil cilj ugotoviti, katere značilke uporabiti pri klasifikaciji, oziroma, katere značilke vplivajo na humor v tvitu. Za to smo uporabili t.i. funkcije značilk (angl. feature function), na podlagi, katerih se je potem naš model učil. Boljpe funkcije značilk bomo uporabili, bolje se bo naš model naučil napovedovanja, boljši bodo rezultati, ki jih bomo predstavili v poglavju Rezultati.
+
 \subsection{Podatki}
+
+Za reševanje problema klasifikacije humorja so nam bili na voljo podatki iz oddaje \@midnight, kjer so si zbrani gostje, komiki, morali izmisliti tvit, kjer bi uporabili določen hashtag, ki predstavlja neko temo. Na primer na temo, ki je določena z hashtag-om \#DogBooks, so si morali izmisliti, čim bolj smešne tvite v povezavi s knjigami o psih. Bodisi so to naslovi knjig ali besedne igre. Na podlagi svojih predlogov tvitov so bili tudi ocenjeni, ali je bil njihov predlog smešen ali ne.
+
+Ti podatki so zbrani v 2 direktorijih. Enega smo uporabili za učenje našega modela klasifikatorja, drugega pa za napovedovanje in merjenje uspešnosti naše rešitve. Znotraj tih dveh direktorijev je na voljo več datotek, katerih se vsaka nanaša na določeno temo oziroma hashtag, kjer so zbrani tviti s to temo.
 
 \subsection{Predprocesiranje}
 
+Podatki, ki so zapisani znotraj datotek, ki imajo končnico .tsv, so v tviti, ki so bili objavljeni na Twitter-ju in dodatno označeni s hashtag-om določene teme. Primer ene vrstice v teh datoteka izgleda tako:
+
+\begin{lstlisting}
+	712653798003621888 @midnight Bone With the Wind #DogBooks 0
+\end{lstlisting}
+
+Najprej je zapisan ID tvita, ki je predstavljen v obliki števila, nato je tekst tvita, ki je bil objavljen in na koncu ocena. Ocena 0 predstavlja, da tvit ni bil ocenjen kot smešen, 1 pomeni, da je tvit smešen in ocena 2 pomeni, da je tvit najbolj smešen znotraj te teme oziroma hashtag-a.
+
+Potrebno je tudi poudariti, da je pri samem tekstu v tvitu bilo ponekod, kar nekaj odvečnih podatkov, ki smo jih morali pred samo klasifikacijo odstraniti, saj bi drugače vplivali na rezultate. Sem spadajo dodatni hashtag-i poleg osnovnega, ki se nanaša na temo, razne hiperpovezave in oznaka \@midnight. 
+
+Podatke o tvitu smo nato shranili v objekt oziroma razred, ki ima atribute id, hashtag, text in tokens. Atribut tokens je pomemben atribut, kajti večino funkcij značilk bo delovalo v povezavi z njim. Namreč, sem smo shranili posamezne besede, ki se pojavi v tekstu tvita, ki smo lematizirane, odstranjeni so dodatni presledki in stop besede, kot so vezniki, mašila in podobno.
+
+Za pridobivanje čim kvalitetnejših značilk smo uporabili tudi dodatne podatke, kot zbirke slengovskih, pozivitivnih, negativnih besed in emoticon-ov.
+
 \subsection{Značilke}
+
+
 
 \subsection{Klasifikacija}
 
