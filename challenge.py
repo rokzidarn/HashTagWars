@@ -115,23 +115,23 @@ def processPuns(mostCommonWord):
         return None
 
 # CLASSIFICATION
-def numOfCapitalLettersFF(text):
+def ratioOfCapitalLettersFF(text):
     tokens = nltk.word_tokenize(text)
     up = 0
     for token in tokens:
         for char in token:
             if(char.isupper()):
                 up += 1
-    return up
+    return up/len(tokens)
 
-def numOfStopWordsFF(text):
+def ratioOfStopWordsFF(text):
     tokens = nltk.word_tokenize(text)
     stop = 0
     stopWords = nltk.corpus.stopwords.words('english')
     for token in tokens:
         if token in stopWords:
             stop += 1
-    return stop
+    return stop/len(tokens)
 
 def containsPunctuationFF(text):
     tokens = nltk.word_tokenize(text)
@@ -140,8 +140,9 @@ def containsPunctuationFF(text):
             return True
     return False
 
-def numOfLemmasFF(tokens):
-    return len(tokens)
+def ratioOfLemmasFF(tokens, text):
+    t = nltk.word_tokenize(text)
+    return len(tokens)/len(t)
 
 def containsMostCommonWordFF(tokens, mostCommonWord):
     if(mostCommonWord in tokens):
@@ -192,21 +193,11 @@ def positiveToNegativeWordRatio(text, negativeWords, positiveWords):
     else:
         return positive/negative
 
-def calculatePerplexity(text, tokens):  # not working
-    ngram = nltk.model.ngram.NgramModel(2, tokens)
-    perplexity = ngram.perplexity(text)
-    return perplexity
-
 def calculateLexicalDiversity(text):
     textT = nltk.Text(text)
     if(len(textT) == 0):
         return 0
     return round(len(set(textT)) / len(textT) * 100, 2)
-
-def maxPOSTags(tokens):  # not working, want to get all possible for token
-    for token in tokens:
-        postag = nltk.tag.pos_tag([token])
-        print(postag)
 
 def calculateVerbToNounRatio(tokens):
     nouns = 0
@@ -257,10 +248,10 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negat
 
     for tweet in hashtagTweets:
         curr = []  # features of current tweet, FF - feature functions
-        curr.append(numOfCapitalLettersFF(tweet.text))
-        curr.append(numOfStopWordsFF(tweet.text))
+        curr.append(ratioOfCapitalLettersFF(tweet.text))
+        curr.append(ratioOfStopWordsFF(tweet.text))
         curr.append(containsPunctuationFF(tweet.text))
-        curr.append(numOfLemmasFF(tweet.tokens))
+        curr.append(ratioOfLemmasFF(tweet.tokens, tweet.text))
         curr.append(containsMostCommonWordFF(tweet.tokens, mostCommonWord))
         curr.append(cosineSimilarityToPunFF(tweet.text, pun))
         sentimentScores = getSentimentScores(tweet.text)
@@ -269,9 +260,7 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negat
         curr.append(containsProfanity(tweet.text, profanityWords))
         curr.append(containsNegativeWords(tweet.text, negativeWords))
         curr.append(containsEmoticons(tweet.text, emoticons))
-        #curr.append(calculatePerplexity(tweet.text, tweet.tokens))
         curr.append(calculateLexicalDiversity(tweet.text))
-        #curr.append(maxPOSTags(tweet.tokens))
         curr.append(calculateVerbToNounRatio(tweet.tokens))
         curr.append(positiveToNegativeWordRatio(tweet.text, negativeWords, positiveWords))
         curr.append(containsSlang(tweet.text, slangWords))

@@ -11,11 +11,5 @@ SemEval 2017 Challenge - Task 6
 TODO:
     # clustering hashtags, sysnsets to define similiar hashtags -> classify only with them
     # feature functions:
-        !dataset - slang, contains -> true/false
-
-        *perplexity of a tweet -> bigger == humour
-        *sense combination: t = count tags per token; s = multiply tag number (t1*t2*t3); log(s) -> all combinations of tags
-        *max number of POS tags a token (word) can have -> more == ambiguity (sarcasm)
-
         hypernym distance between synsets (2 verbs/nouns -> get hypernym -> distance between synsets) -> large distance == humour
         repetition: the minimum meaning distance of word pairs in a sentence
