@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 import requests
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.tokenize import TweetTokenizer
+import time
 
 #  --------------------------------------------------------------------------------
 # classes
@@ -230,6 +231,14 @@ def containsEmoticons(text, emoticonList):
             return True
     return False
 
+def containsSlang(text, slangList):
+    tweetTokenizer = TweetTokenizer()
+    tokens = tweetTokenizer.tokenize(text)
+    for token in tokens:
+        if token in slangList:
+            return True
+    return False
+
 def calculateSemanticRelatedness(textTokens):
     maxSR = 0
 
@@ -243,12 +252,18 @@ def calculateSemanticRelatedness(textTokens):
                     maxSR = sim
     return maxSR
 
-def containsSlang(text, slangList):
-    tweetTokenizer = TweetTokenizer()
-    tokens = tweetTokenizer.tokenize(text)
-    for token in tokens:
-        if token in slangList:
-            return True
+def hypernymRepetition(tokens):
+    for htoken in tokens:
+        for token in tokens:
+            s1 = nltk.corpus.wordnet.synsets(htoken)
+            s2 = nltk.corpus.wordnet.synsets(token)
+            if (len(s1) > 0 and len(s2) > 0 and (htoken is not token)):
+                h1 = s1[0].hypernyms()
+                h2 = s2[0].hypernyms()
+                if(len(h1) > 0 and len(h2) > 0):
+                    sim = h1[0].path_similarity(h2[0])
+                    if(sim == 1):  # identity
+                        return True
     return False
 
 def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negativeWords, positiveWords, emoticons, slangWords):
@@ -275,6 +290,7 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negat
         curr.append(positiveToNegativeWordRatio(tweet.text, negativeWords, positiveWords))
         curr.append(containsSlang(tweet.text, slangWords))
         curr.append(calculateSemanticRelatedness(tweet.tokens))
+        curr.append(hypernymRepetition(tweet.tokens))
 
         features.append(curr)
         score = tweet.score
@@ -283,15 +299,17 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negat
         classes.append(score)
 
     (X, y) = (numpy.array(features), numpy.array(classes))
-    print(("Dataset shape: {}".format((X.shape, y.shape))))
+    #print(("Dataset shape: {}".format((X.shape, y.shape))))
     from sklearn.naive_bayes import MultinomialNB
     clf = MultinomialNB(alpha=.01)
     clf.fit(X, y)
 
     scorings = ["accuracy"]  # "precision_weighted", "recall_weighted", "f1_weighted"
+    scores = []
     for scoring in scorings:
-        scores = sklearn.model_selection.cross_val_score(clf, X, y, cv=5, scoring=scoring)
-        print(scores)
+        score = sklearn.model_selection.cross_val_score(clf, X, y, cv=5, scoring=scoring)
+        scores.append(score)
+    print("Accuracy score: {0:1.3f}".format(numpy.mean(scores)))
 
 # CLUSTERING
 def tokenizeHashtag(rawHashtags):
@@ -389,6 +407,9 @@ dataList = []  # 2D list, [hashtag][tweet]
 hashtags = []  # list of all hashtags
 rawHashtags = []  # raw hashtags, easier to tokenize in clustering
 subdirectory = "test_data/"
+
+start_time = time.time()
+
 for f in os.listdir(os.getcwd()+"/"+subdirectory):  # preprocessing
     hashtag = "#"+str(os.path.basename(f)[:-4].replace("_", ""))
     rawHashtags.append(os.path.basename(f)[:-4])
@@ -407,5 +428,10 @@ for i in range(len(dataList)):  # process each category (hashtag) separately
     #tweetsByScore = getTweetsInHashtagByScore(hashtagTweets)  # 0 == not funny, 1 == funnny
     #printData(tweetsByScore)
     mostCommonWord = getMostCommonWords(hashtagTweets)
+    print(hashtagTweets[0].hashtag)
     classifyTweetsByHashtag(hashtagTweets, mostCommonWord, wordData[0], wordData[1], wordData[2], wordData[3], slangData[0])
-    #print("-----------------------------")
+    print("-----------------------------")
+
+print("Time elapsed: {0:4.2f} seconds".format(time.time() - start_time))
+
+# exclude #MarriageAdviceIn3Words from train_data -> too few members, causes warning!

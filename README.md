@@ -10,7 +10,3 @@ SemEval 2017 Challenge - Task 6
 
 TODO:
     # clustering hashtags, sysnsets to define similiar hashtags -> classify only with them
-    # feature functions:
-        perplexity of a tweet -> bigger == humour
-        hypernym distance between synsets (2 verbs/nouns -> get hypernym -> distance between synsets) -> large distance == humour
-        repetition: the minimum meaning distance of word pairs in a sentence
