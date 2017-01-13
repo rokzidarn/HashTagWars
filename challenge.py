@@ -168,28 +168,28 @@ def cosineSimilarityToPunFF(text, pun):
     else:
         return 0
 
-def getSentimentScores(text):   # returns scores for positive, negative sentiment
+def getSentimentScoresFF(text):   # returns scores for positive, negative sentiment
     sid = SentimentIntensityAnalyzer()
     ss = sid.polarity_scores(text)
     positive = ss["pos"]
     negative = ss["neg"]
     return [positive, negative]
 
-def containsProfanity(text, profanityWords):
+def containsProfanityFF(text, profanityWords):
     tokens = nltk.word_tokenize(text)
     for token in tokens:
         if token in profanityWords:
             return True
     return False
 
-def containsNegativeWords(text, negativeWords):
+def containsNegativeWordsFF(text, negativeWords):
     tokens = nltk.word_tokenize(text)
     for token in tokens:
         if token in negativeWords:
             return True
     return False
 
-def positiveToNegativeWordRatio(text, negativeWords, positiveWords):
+def positiveToNegativeWordRatioFF(text, negativeWords, positiveWords):
     negative = 0
     positive = 0
     tokens = nltk.word_tokenize(text)
@@ -203,13 +203,7 @@ def positiveToNegativeWordRatio(text, negativeWords, positiveWords):
     else:
         return positive/negative
 
-def calculateLexicalDiversity(text):
-    textT = nltk.Text(text)
-    if(len(textT) == 0):
-        return 0
-    return round(len(set(textT)) / len(textT) * 100, 2)
-
-def calculateVerbToNounRatio(tokens):
+def calculateVerbToNounRatioFF(tokens):
     nouns = 0
     verbs = 0
     for token in tokens:
@@ -223,7 +217,7 @@ def calculateVerbToNounRatio(tokens):
     else:
         return verbs/nouns
 
-def containsEmoticons(text, emoticonList):
+def containsEmoticonsFF(text, emoticonList):
     tweetTokenizer = TweetTokenizer()
     tokens = tweetTokenizer.tokenize(text)
     for token in tokens:
@@ -231,7 +225,7 @@ def containsEmoticons(text, emoticonList):
             return True
     return False
 
-def containsSlang(text, slangList):
+def containsSlangFF(text, slangList):
     tweetTokenizer = TweetTokenizer()
     tokens = tweetTokenizer.tokenize(text)
     for token in tokens:
@@ -239,11 +233,17 @@ def containsSlang(text, slangList):
             return True
     return False
 
-def calculateSemanticRelatedness(textTokens):
+def calculateLexicalDiversityFF(text):
+    textT = nltk.Text(text)
+    if(len(textT) == 0):
+        return 0
+    return round(len(set(textT)) / len(textT) * 100)
+
+def calculateMaxSemanticRelatednessFF(tokens):
     maxSR = 0
 
-    for token in textTokens:
-        for htoken in textTokens:
+    for token in tokens:
+        for htoken in tokens:
             synset1 = nltk.corpus.wordnet.synsets(htoken)
             synset2 = nltk.corpus.wordnet.synsets(token)
             if (len(synset1) > 0 and len(synset2) > 0 and (htoken is not token)):
@@ -252,7 +252,7 @@ def calculateSemanticRelatedness(textTokens):
                     maxSR = sim
     return maxSR
 
-def hypernymRepetition(tokens):
+def hypernymRepetitionFF(tokens):
     for htoken in tokens:
         for token in tokens:
             s1 = nltk.corpus.wordnet.synsets(htoken)
@@ -279,18 +279,18 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negat
         curr.append(ratioOfLemmasFF(tweet.tokens, tweet.text))
         curr.append(containsMostCommonWordFF(tweet.tokens, mostCommonWord))
         curr.append(cosineSimilarityToPunFF(tweet.text, pun))
-        sentimentScores = getSentimentScores(tweet.text)
+        sentimentScores = getSentimentScoresFF(tweet.text)
         curr.append(sentimentScores[0])
         curr.append(sentimentScores[1])
-        curr.append(containsProfanity(tweet.text, profanityWords))
-        curr.append(containsNegativeWords(tweet.text, negativeWords))
-        curr.append(containsEmoticons(tweet.text, emoticons))
-        curr.append(calculateLexicalDiversity(tweet.text))
-        curr.append(calculateVerbToNounRatio(tweet.tokens))
-        curr.append(positiveToNegativeWordRatio(tweet.text, negativeWords, positiveWords))
-        curr.append(containsSlang(tweet.text, slangWords))
-        curr.append(calculateSemanticRelatedness(tweet.tokens))
-        curr.append(hypernymRepetition(tweet.tokens))
+        curr.append(containsProfanityFF(tweet.text, profanityWords))
+        curr.append(containsNegativeWordsFF(tweet.text, negativeWords))
+        curr.append(containsEmoticonsFF(tweet.text, emoticons))
+        curr.append(calculateLexicalDiversityFF(tweet.text))
+        curr.append(calculateVerbToNounRatioFF(tweet.tokens))
+        curr.append(positiveToNegativeWordRatioFF(tweet.text, negativeWords, positiveWords))
+        curr.append(containsSlangFF(tweet.text, slangWords))
+        curr.append(calculateMaxSemanticRelatednessFF(tweet.tokens))
+        curr.append(hypernymRepetitionFF(tweet.tokens))
 
         features.append(curr)
         score = tweet.score

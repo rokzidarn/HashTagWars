@@ -80,9 +80,81 @@ Za pridobivanje čim kvalitetnejših značilk smo uporabili tudi dodatne podatke
 
 \subsection{Značilke}
 
+Pri klasifikaciji smo uporabili večje število značilk, ki smo jih pridobili s pomočjo funkcij. Ta so bodisi vračala binarno vrednost true/false, razmerja določenih lasnosti teksta, razdalje bodisi razne mere. Spodaj so naštete in opisane uporabljene funkcije:
 
+\begin{itemize}
+	\item ratioOfCapitalLettersFF(text)
+	\begin{description}
+		\item Izračuna razmerje med številom besed, ki se začnejo z veliko začetnico in vsemi besedami oziroma dolžino teksta
+	\end{description}
+	\item ratioOfStopWordsFF(text)
+	\begin{description}
+		\item Izračuna razmerje med številom stop besed in dolžino teksta
+	\end{description}
+	\item containsPunctuationFF(text)
+	\begin{description}
+		\item Vrne logično vrednost (true/false), bodisi tekst vsebuje ločila ali jih morda ne, preverja pike, vejice, podpičja, vprašaje in podobno
+	\end{description}
+	\item ratioOfLemmasFF(tokens, text)
+	\begin{description}
+		\item Izračuna razmerje med vsemi besedami, vključno z stop besedami, emoticoni in podobnim, ter lematiziranimi besedami, če jih ne najde vrne vrednost 0
+	\end{description}
+	\item containsMostCommonWordFF(tokens, mostCommonWord)
+	\begin{description}
+		\item Najprej se iz učne množice ugotovi, katera je najpogostejša beseda, pri tem so izločene stop besede, nato v tekstu pregleda ali se ta beseda nahaja notri, če se vrne logično vrednost true
+	\end{description}
+	\item cosineSimilarityToPunFF(text, pun):
+	\begin{description}
+		\item Na podlagi teme oziroma hashtag-a na spletnem viru preišče bazo besednih iger s podobno vsebino. Pridobi te podatke in nato izračuna kosinusno podobnost med tekstom besedne igre in tekstom tvita 
+	\end{description}
+	\item getSentimentScoresFF(text):
+	\begin{description}
+		\item S pomočjo modula SentimentAnalyzer izračuna mero pozitivnega in negativnega sentimenta v tekstu 
+	\end{description}
+	\item containsProfanityFF(text, profanityWords):
+	\begin{description}
+		\item Vrne logično vrednost ali tekst vsebuje žaljive besede ali ne 
+	\end{description}
+	\item containsNegativeWordsFF(text, negativeWords):
+	\begin{description}
+		\item Vrne logično vrednost ali tekst vsebuje negativne besede ali ne, na podlagi zbirke podatkov
+	\end{description}
+	\item positiveToNegativeWordRatioFF(text, negativeWords, positiveWords):
+	\begin{description}
+		\item Vrne razmerje med pozitivnimi in negativnimi besedami, v primeru, da ne najde podatkov vrne vrednost 1
+	\end{description}
+	\item calculateVerbToNounRatioFF(tokens)
+	\begin{description}
+		\item Izračuna razmerje med številom glagolov in samostalnikov v tekstu, če se ne pojavita ti skupini besed, vrne vrednost 0
+	\end{description}
+	\item containsEmoticonsFF(text, emoticonList)
+	\begin{description}
+		\item Vrne logično vrednost ali besedilo vsebuje emoticone ali ne
+	\end{description}
+	\item containsSlangFF(text, slangList)
+	\begin{description}
+		\item Vrne logično vrednost ali besedilo vsebuje sleng ali ne
+	\end{description}
+	\item calculateLexicalDiversityFF(text)
+	\begin{description}
+		\item Izračuna leksikalno raznolikost, izogibanje ponavljanju besede
+	\end{description}
+	\item calculateSemanticRelatednessFF(tokens)
+	\begin{description}
+		\item Izračuna maksimalno semantično sorodnost, na podlagi para besed, pridobi njune synsete, izračuna podobnost ter vrne maksimalno vrednost nekega para
+	\end{description}
+	\item hypernymRepetitionFF(tokens)
+	\begin{description}
+		\item Vsako besedo primerja z ostalimi iz teksta, pridobi njuna hipernima (nadpomenki) in v primeru, da imata ti besedi isto nadpomenko vrne logično vrednost true, drugače false
+	\end{description}
+
+\end{itemize}
 
 \subsection{Klasifikacija}
+
+Na podlagi spisanih funkcij značilk bo delovala naša klasifikacija. Klasifikator oziroma model se bo na podlagi lastnosti, ki bodo definirana z značilkami ter predhodno definirano vrednostjo humorja tvita naučil, kako so zgrajeni smešni tviti in kako ne, ter bo napovedoval na testni množici podatkov. 
+
+Za klasifikacijo smo uporabili naivnega bayesa.
 
 \section{Results}
 
