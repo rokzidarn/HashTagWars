@@ -122,7 +122,10 @@ def ratioOfCapitalLettersFF(text):
         for char in token:
             if(char.isupper()):
                 up += 1
-    return up/len(tokens)
+    if(len(tokens) == 0):
+        return 0
+    else:
+        return up/len(tokens)
 
 def ratioOfStopWordsFF(text):
     tokens = nltk.word_tokenize(text)
@@ -131,7 +134,10 @@ def ratioOfStopWordsFF(text):
     for token in tokens:
         if token in stopWords:
             stop += 1
-    return stop/len(tokens)
+    if (len(tokens) == 0):
+        return 0
+    else:
+        return stop / len(tokens)
 
 def containsPunctuationFF(text):
     tokens = nltk.word_tokenize(text)
@@ -142,7 +148,10 @@ def containsPunctuationFF(text):
 
 def ratioOfLemmasFF(tokens, text):
     t = nltk.word_tokenize(text)
-    return len(tokens)/len(t)
+    if(len(tokens) == 0 or len(t) == 0):
+        return 0
+    else:
+        return len(tokens)/len(t)
 
 def containsMostCommonWordFF(tokens, mostCommonWord):
     if(mostCommonWord in tokens):
@@ -221,13 +230,14 @@ def containsEmoticons(text, emoticonList):
             return True
     return False
 
-def calculateSemanticRelatedness(hashtagTokens, textTokens):  # get tokens from hashtag + test
+def calculateSemanticRelatedness(textTokens):
     maxSR = 0
-    for htoken in hashtagTokens:
-        for token in textTokens:
+
+    for token in textTokens:
+        for htoken in textTokens:
             synset1 = nltk.corpus.wordnet.synsets(htoken)
             synset2 = nltk.corpus.wordnet.synsets(token)
-            if (len(synset1) > 0 and len(synset2) > 0):
+            if (len(synset1) > 0 and len(synset2) > 0 and (htoken is not token)):
                 sim = synset1[0].wup_similarity(synset2[0])
                 if (sim is not None and sim > maxSR):
                     maxSR = sim
@@ -264,6 +274,7 @@ def classifyTweetsByHashtag(hashtagTweets, mostCommonWord, profanityWords, negat
         curr.append(calculateVerbToNounRatio(tweet.tokens))
         curr.append(positiveToNegativeWordRatio(tweet.text, negativeWords, positiveWords))
         curr.append(containsSlang(tweet.text, slangWords))
+        curr.append(calculateSemanticRelatedness(tweet.tokens))
 
         features.append(curr)
         score = tweet.score
